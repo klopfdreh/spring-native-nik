@@ -48,8 +48,8 @@ COPY ./InitializeAtBuildTime /native-image-build/
 COPY ./InitializeAtRunTime /native-image-build/
 RUN jar -xvf ${ARTIFACT_JAR_PATTERN}
 RUN native-image \
-`if [ -s ./InitializeAtBuildTime ] ; then echo -n '--initialize-at-build-time=' ; cat ./InitializeAtBuildTime | tr "\n" "," ; fi` \
-`if [ -s ./InitializeAtRunTime ] ; then echo -n '--initialize-at-run-time=' ; cat ./InitializeAtRunTime | tr "\n" "," ; fi` \
+--initialize-at-build-time=`cat ./InitializeAtBuildTime | tr '\n' ','` \
+--initialize-at-run-time=`cat ./InitializeAtRunTime | tr '\n' ','` \
 --no-fallback \
 -march=native \
 --enable-https \
