@@ -44,8 +44,17 @@ ENV PATH="$PATH:/Library/Java/LibericaNativeImageKit/${NIK_FOLDER}/bin/"
 RUN mkdir -p /native-image-build/
 COPY ./target/${ARTIFACT_JAR_PATTERN} /native-image-build/
 WORKDIR /native-image-build/
+COPY ./InitializeAtBuildTime /native-image-build/
+COPY ./InitializeAtRunTime /native-image-build/
 RUN jar -xvf ${ARTIFACT_JAR_PATTERN}
-RUN native-image --no-fallback -march=native --enable-https -H:Name=${BINARY_NAME} -cp .:BOOT-INF/classes:`find BOOT-INF/lib | tr '\n' ':'` ${MAIN_CLASS}
+RUN native-image \
+`if [ -s ./InitializeAtBuildTime ] ; then echo -n '--initialize-at-build-time=' ; cat ./InitializeAtBuildTime | tr "\n" "," ; fi` \
+`if [ -s ./InitializeAtRunTime ] ; then echo -n '--initialize-at-run-time=' ; cat ./InitializeAtRunTime | tr "\n" "," ; fi` \
+--no-fallback \
+-march=native \
+--enable-https \
+-H:Name=${BINARY_NAME} \
+-cp .:BOOT-INF/classes:`find BOOT-INF/lib | tr '\n' ':'` ${MAIN_CLASS}
 
 # Copy native image to destination
 RUN mkdir -p /native-image/
